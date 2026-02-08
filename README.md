@@ -25,6 +25,10 @@ sqldelight {
 ```
 ----
 
+PostgresApp is preinstalled with extensions
+
+https://postgresapp.com/extensions/
+
 ```shell
 createdb geovectors &&
 ./gradlew build &&
