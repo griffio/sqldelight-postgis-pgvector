@@ -1,0 +1,51 @@
+insertLocation:
+INSERT INTO Locations (name, point, embedding)
+VALUES (
+  :name,
+  ST_SetSRID(ST_MakePoint(:longitude::FLOAT, :latitude::FLOAT), 4326)::GEOGRAPHY,
+  :embedding::VECTOR
+);
+
+selectWithinMeters:
+SELECT
+  id,
+  name,
+  point,
+  embedding
+FROM Locations
+WHERE ST_DWithin(
+  point,
+  ST_SetSRID(ST_MakePoint(:longitude::FLOAT, :latitude::FLOAT), 4326)::GEOGRAPHY,
+  :radiusMeters::FLOAT
+)
+ORDER BY id;
+
+selectNearbyRankedByEmbeddingCosine:
+SELECT
+  id,
+  name,
+  ST_Distance(
+    point,
+    ST_SetSRID(ST_MakePoint(:longitude::FLOAT, :latitude::FLOAT), 4326)::GEOGRAPHY
+  ) AS distanceMeters,
+  (embedding <=> :queryEmbedding::VECTOR) AS embeddingDistance
+FROM Locations
+WHERE ST_DWithin(
+  point,
+  ST_SetSRID(ST_MakePoint(:longitude::FLOAT, :latitude::FLOAT), 4326)::GEOGRAPHY,
+  :radiusMeters::FLOAT
+)
+ORDER BY (embedding <=> :queryEmbedding::VECTOR) ASC, distanceMeters ASC
+LIMIT :limit::INTEGER;
+
+selectNearestByEmbeddingOnly:
+SELECT
+  id,
+  name,
+  (embedding <=> :queryEmbedding::VECTOR) AS embeddingDistance
+FROM Locations
+ORDER BY (embedding <=> :queryEmbedding::VECTOR) ASC
+LIMIT :limit::INTEGER;
+
+deleteAllLocations:
+DELETE FROM Locations;

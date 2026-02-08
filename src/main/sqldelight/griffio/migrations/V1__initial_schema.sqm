@@ -1,0 +1,16 @@
+import com.pgvector.PGbit;
+import com.pgvector.PGvector;
+import net.postgis.jdbc.geometry.Point;
+
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+CREATE TABLE IF NOT EXISTS Locations (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  point GEOGRAPHY(POINT, 4326) AS Point NOT NULL,
+  embedding VECTOR(3) AS PGvector NOT NULL  -- Adjust dimension based on your embedding model
+);
+
+CREATE INDEX IF NOT EXISTS locations_point_gix ON Locations USING GIST (point);
+CREATE INDEX IF NOT EXISTS locations_embedding_ivfflat ON Locations USING IVFFLAT (embedding vector_cosine_ops) WITH (lists = 100);
